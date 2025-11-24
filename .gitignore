@@ -1,5 +1,7 @@
 node_modules/
-drift.sqlite
-.DS_Store
 .vercel/
+drift.sqlite
+*.sqlite
 .env
+npm-debug.log*
+*.log
