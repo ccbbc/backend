@@ -85,8 +85,10 @@ app.get('/drift/random', verifySignature, (req, res) => {
 })
 
 const port = process.env.PORT || 8080
-app.listen(port, () => {
-  console.log(`Listening on http://localhost:${port}/`)
-})
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Listening on http://localhost:${port}/`)
+  })
+}
 
 export default (req, res) => app(req, res)
