@@ -1,7 +1,0 @@
-node_modules/
-drift.sqlite
-.env
-npm-debug.log*
-*.log
-*.tmp
-.DS_Store
