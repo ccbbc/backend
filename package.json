@@ -4,10 +4,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "express": "^4.19.2",
-    "sql.js": "^1.9.0"
+    "@vercel/postgres": "^0.7.0"
   },
   "scripts": {
-    "start": "node server.js"
+    "dev": "vercel dev"
   }
 }
