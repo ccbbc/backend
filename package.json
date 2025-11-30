@@ -1,13 +1,14 @@
 {
   "name": "cbcustom-backend",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "express": "^4.19.2",
-    "sql.js": "^1.9.0"
-  },
+  "type": "commonjs",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sql.js": "^1.11.0"
   }
 }

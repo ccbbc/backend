@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漂流瓶纪念册</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --card-bg: #16213e;
+            --text-primary: #e94560;
+            --text-secondary: #0f3460;
+            --text-light: #ecf0f1;
+            --accent: #533483;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--text-primary);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid #333;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.5);
+            border-color: var(--text-primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .participants {
+            margin-bottom: 15px;
+        }
+
+        .participant-tag {
+            background-color: var(--text-secondary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-right: 5px;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            position: relative;
+            border: 2px solid var(--text-primary);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .message-chain {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-bubble {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .message-bubble.author {
+            border-left: 4px solid var(--text-primary);
+        }
+
+        .message-bubble.reply {
+            border-left: 4px solid var(--accent);
+            margin-left: 20px;
+        }
+
+        .message-meta {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bottle-info {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+
+        .status-bless { color: #4caf50; }
+        .status-curse { color: #f44336; }
+        .status-normal { color: #2196f3; }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📜 漂流瓶纪念册</h1>
+            <p>永久保存那些跨越时空的对话</p>
+        </header>
+
+        <div id="gallery" class="grid">
+            <!-- Cards will be injected here -->
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">纪念册详情</h2>
+            <div id="modalBody">
+                <!-- Content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Format timestamp to readable date
+        function formatDate(ts) {
+            return new Date(ts).toLocaleString('zh-CN', { 
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // Fetch and display memorials
+        async function loadMemorials() {
+            try {
+                const res = await fetch('/memorials');
+                const memorials = await res.json();
+                
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+
+                if (memorials.length === 0) {
+                    gallery.innerHTML = '<div class="empty-state"><h2>暂无纪念册</h2><p>当一个漂流瓶完成5次传递，它将出现在这里。</p></div>';
+                    return;
+                }
+
+                memorials.forEach(m => {
+                    const participants = JSON.parse(m.participants || '[]');
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.onclick = () => showDetails(m.bottle_id);
+                    
+                    let participantsHtml = participants.map(p => `<span class="participant-tag">${p}</span>`).join('');
+                    
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <span>ID: #${m.bottle_id}</span>
+                            <span>${formatDate(m.created_at)}</span>
+                        </div>
+                        <div class="participants">
+                            <strong>参与者:</strong><br>
+                            <div style="margin-top:5px">${participantsHtml}</div>
+                        </div>
+                        <div style="text-align:right; color:var(--text-primary); font-size:0.9em;">点击查看详情 &rarr;</div>
+                    `;
+                    gallery.appendChild(card);
+                });
+            } catch (err) {
+                console.error('Failed to load memorials:', err);
+                document.getElementById('gallery').innerHTML = '<div class="empty-state">加载失败，请检查后端连接</div>';
+            }
+        }
+
+        // Fetch and show details for a specific bottle
+        async function showDetails(bottleId) {
+            const modal = document.getElementById('detailModal');
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = '<p style="text-align:center">加载中...</p>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch(`/bottles/${bottleId}`);
+                if (!res.ok) throw new Error('Failed to fetch details');
+                const bottle = await res.json();
+
+                let statusClass = 'status-normal';
+                let statusText = '普通';
+                if (bottle.bless_curse === 'bless') { statusClass = 'status-bless'; statusText = '✨ 祝福'; }
+                if (bottle.bless_curse === 'curse') { statusClass = 'status-curse'; statusText = '☠️ 诅咒'; }
+
+                let html = `
+                    <div class="bottle-info">
+                        <div class="info-item">
+                            <span class="info-label">发起人</span>
+                            <span>${bottle.author}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">类型</span>
+                            <span>${bottle.type || 'message'} (${bottle.kind})</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">状态</span>
+                            <span class="${statusClass}" style="font-weight:bold">${statusText}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">投递时间</span>
+                            <span>${formatDate(bottle.timestamp)}</span>
+                        </div>
+                    </div>
+
+                    <div class="message-chain">
+                        <!-- Original Message -->
+                        <div class="message-bubble author">
+                            <div class="message-meta">
+                                <span>${bottle.author} (发起)</span>
+                                <span>#1</span>
+                            </div>
+                            <div class="message-content">${bottle.content}</div>
+                        </div>
+                `;
+
+                // Replies
+                if (bottle.replies && bottle.replies.length > 0) {
+                    bottle.replies.forEach((reply, index) => {
+                        html += `
+                            <div class="message-bubble reply">
+                                <div class="message-meta">
+                                    <span>${reply.user} (回复)</span>
+                                    <span>#${index + 2}</span>
+                                </div>
+                                <div class="message-content">${reply.content}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += '</div>'; // End message-chain
+                modalBody.innerHTML = html;
+
+            } catch (err) {
+                modalBody.innerHTML = '<p style="color:red; text-align:center">无法加载详情</p>';
+                console.error(err);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Initialize
+        loadMemorials();
+    </script>
+</body>
+</html>

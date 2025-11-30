@@ -1,0 +1,13 @@
+{
+  "item_id": "cb_custom:message_bottle",
+  "author": "玩家名",
+  "content": "示例第一页内容",
+  "timestamp": 1732886400000,
+  "reply_count": 3,
+  "replies": [
+    { "user": "玩家B", "content": "玩家B的回复页内容" },
+    { "user": "玩家C", "content": "玩家C的回复页内容" },
+    { "user": "玩家D", "content": "玩家D的回复页内容" },
+    { "user": "玩家E", "content": "玩家E的回复页内容" }
+  ]
+}
